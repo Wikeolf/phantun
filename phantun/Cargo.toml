@@ -22,3 +22,4 @@ tokio-tun = "0"
 num_cpus = "1"
 neli = "0"
 nix = { version = "0", features = ["net"] }
+dns-lookup = "2.0.4"
