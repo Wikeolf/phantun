@@ -121,7 +121,7 @@ async fn main() -> io::Result<()> {
 
     let ip4p_resolve = matches.get_flag("ip4p_remote");
 
-    let remote_addr = lookup_host(matches.get_one::<String>("remote").unwrap(), ip4p_resolve, ipv4_only).await;
+    let mut remote_addr = lookup_host(matches.get_one::<String>("remote").unwrap(), ip4p_resolve, ipv4_only).await;
 
     let tun_local: Ipv4Addr = matches
         .get_one::<String>("tun_local")
@@ -194,6 +194,15 @@ async fn main() -> io::Result<()> {
             let sock = stack.connect(remote_addr).await;
             if sock.is_none() {
                 error!("Unable to connect to remote {}", remote_addr);
+                // if using IP4P domain, server's IP address maybe is changed
+                // and we need to re-resolve the domain name
+                if ip4p_resolve {
+                    let new_remote_addr = lookup_host(matches.get_one::<String>("remote").unwrap(), ip4p_resolve, ipv4_only).await;
+                    if new_remote_addr != remote_addr {
+                        info!("IP4P domain {} changed to {}", remote_addr, new_remote_addr);
+                        remote_addr = new_remote_addr;
+                    }
+                } 
                 continue;
             }
 
